@@ -139,6 +139,28 @@
   </section>
 
   <section class="card">
+    <h2><span>排便记录</span><span>🍃</span></h2>
+    <div class="grid2">
+      <div><label>排便时间</label><input id="bowelTime" type="time"></div>
+      <div><label>今日次数</label><input id="bowelCount" type="number" min="0" step="1" placeholder="例如 1"></div>
+      <div><label>排便状态</label>
+        <select id="bowelStatus">
+          <option value="">未记录</option>
+          <option>正常顺畅</option>
+          <option>偏硬</option>
+          <option>干结</option>
+          <option>偏稀</option>
+          <option>腹泻</option>
+          <option>排便困难</option>
+          <option>排便不尽</option>
+          <option>其他</option>
+        </select>
+      </div>
+      <div><label>其他情况</label><input id="bowelNote" type="text" maxlength="60" placeholder="如腹痛、颜色异常等"></div>
+    </div>
+  </section>
+
+  <section class="card">
     <h2><span>运动记录</span><span>🏃‍♀️</span></h2>
     <div class="grid2">
       <div><label>中午训练类型</label>
@@ -185,7 +207,8 @@
 
 <script>
 const fields = ["weight","sleep","breakfast","lunch","dinner","snacks","water","waterGoal",
-  "noonType","noonMinutes","eveningType","eveningMinutes","exerciseNote","reflection"];
+  "bowelTime","bowelCount","bowelStatus","bowelNote","noonType","noonMinutes","eveningType",
+  "eveningMinutes","exerciseNote","reflection"];
 let selectedMood = "";
 const $ = id => document.getElementById(id);
 const todayStr = () => {
