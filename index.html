@@ -109,6 +109,9 @@
         <button class="chip" data-value="有点累">有点累</button>
         <button class="chip" data-value="经期/不适">经期 / 不适</button>
       </div>
+      <div style="margin-top:10px">
+        <input id="moodCustom" type="text" maxlength="40" placeholder="其他感受，可以自己填写" />
+      </div>
     </div>
   </section>
 
@@ -200,6 +203,8 @@ function loadEntry(){
   const d = getAll()[$("date").value] || {};
   fields.forEach(id => $(id).value = d[id] ?? (id==="waterGoal" ? "2000" : id==="water" ? "0" : ""));
   selectedMood = d.mood || "";
+  const presetMood = [...document.querySelectorAll(".chip")].some(c=>c.dataset.value===selectedMood);
+  $("moodCustom").value = presetMood ? "" : selectedMood;
   document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("active",c.dataset.value===selectedMood));
   updateSummary(); renderHistory(); $("status").textContent="";
 }
@@ -255,8 +260,13 @@ function importData(e){
 }
 document.querySelectorAll(".chip").forEach(chip=>chip.addEventListener("click",()=>{
   selectedMood = selectedMood===chip.dataset.value ? "" : chip.dataset.value;
+  $("moodCustom").value = "";
   document.querySelectorAll(".chip").forEach(c=>c.classList.toggle("active",c.dataset.value===selectedMood));
 }));
+$("moodCustom").addEventListener("input",()=>{
+  selectedMood = $("moodCustom").value.trim();
+  document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
+});
 fields.forEach(id=>$(id).addEventListener("input",updateSummary));
 $("date").addEventListener("change",loadEntry);
 $("date").value=todayStr(); loadEntry();
