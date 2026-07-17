@@ -1,0 +1,16 @@
+{
+  "name": "每日饮食运动打卡",
+  "short_name": "每日打卡",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f7f3ef",
+  "theme_color": "#8a7766",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
