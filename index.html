@@ -49,6 +49,8 @@
     .meal-title{font-weight:700;margin-bottom:8px}
     .calorie-row{display:grid;grid-template-columns:1fr 145px;gap:10px;align-items:end;margin-top:9px}
     .calorie-row label{margin:0}
+    .estimate-tools{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
+    .estimate-result{color:var(--good);font-size:12px;line-height:1.5;margin-top:6px;min-height:18px}
     .row{display:flex;gap:10px;align-items:center}
     .row > *{flex:1}
     .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
@@ -141,16 +143,17 @@
 
   <section class="card">
     <h2><span>饮食记录</span><span>🥣</span></h2>
-    <div class="meal"><div class="meal-title">早餐</div><textarea id="breakfast" placeholder="吃了什么、大概分量，例如：鸡蛋2个 + 半个粢饭"></textarea><div class="calorie-row"><div class="photo-help">可参考包装营养表或常用食物热量填写</div><label>估算热量（kcal）<input id="breakfastCalories" type="number" min="0" step="10" placeholder="例如 350"></label></div></div>
-    <div class="meal"><div class="meal-title">午餐</div><textarea id="lunch" placeholder="例如：半碗米饭 + 青菜 + 虾"></textarea><div class="calorie-row"><div class="photo-help">包含烹调油、酱料和饮料会更接近实际</div><label>估算热量（kcal）<input id="lunchCalories" type="number" min="0" step="10" placeholder="例如 550"></label></div></div>
-    <div class="meal"><div class="meal-title">晚餐</div><textarea id="dinner" placeholder="例如：西兰花 + 猪肉，没吃主食"></textarea><div class="calorie-row"><div class="photo-help">没有把握时可先填一个大致范围的中间值</div><label>估算热量（kcal）<input id="dinnerCalories" type="number" min="0" step="10" placeholder="例如 450"></label></div></div>
-    <div class="meal"><div class="meal-title">加餐 / 咖啡 / 饮料</div><textarea id="snacks" placeholder="咖啡、气泡水、水果、零食等"></textarea><div class="calorie-row"><div class="photo-help">含糖饮料、奶和零食也计入全天摄入</div><label>估算热量（kcal）<input id="snacksCalories" type="number" min="0" step="10" placeholder="例如 150"></label></div></div>
+    <div class="estimate-tools"><button class="btn secondary" type="button" onclick="estimateAllMeals()">根据文字粗估四餐热量</button><span class="photo-help">请尽量写清克数、个数、碗数或份数</span></div>
+    <div class="meal"><div class="meal-title">早餐</div><textarea id="breakfast" placeholder="例如：鸡蛋2个 + 半碗粢饭 + 牛奶1杯"></textarea><div class="calorie-row"><button class="btn secondary" type="button" onclick="estimateMealText('breakfast')">粗估早餐</button><label>估算热量（kcal）<input id="breakfastCalories" type="number" min="0" step="10" placeholder="自动填入"></label></div><div class="estimate-result" id="breakfastEstimate"></div></div>
+    <div class="meal"><div class="meal-title">午餐</div><textarea id="lunch" placeholder="例如：米饭150克 + 青菜1份 + 虾100克"></textarea><div class="calorie-row"><button class="btn secondary" type="button" onclick="estimateMealText('lunch')">粗估午餐</button><label>估算热量（kcal）<input id="lunchCalories" type="number" min="0" step="10" placeholder="自动填入"></label></div><div class="estimate-result" id="lunchEstimate"></div></div>
+    <div class="meal"><div class="meal-title">晚餐</div><textarea id="dinner" placeholder="例如：西兰花200克 + 猪肉100克"></textarea><div class="calorie-row"><button class="btn secondary" type="button" onclick="estimateMealText('dinner')">粗估晚餐</button><label>估算热量（kcal）<input id="dinnerCalories" type="number" min="0" step="10" placeholder="自动填入"></label></div><div class="estimate-result" id="dinnerEstimate"></div></div>
+    <div class="meal"><div class="meal-title">加餐 / 咖啡 / 饮料</div><textarea id="snacks" placeholder="例如：苹果1个 + 拿铁1杯"></textarea><div class="calorie-row"><button class="btn secondary" type="button" onclick="estimateMealText('snacks')">粗估加餐</button><label>估算热量（kcal）<input id="snacksCalories" type="number" min="0" step="10" placeholder="自动填入"></label></div><div class="estimate-result" id="snacksEstimate"></div></div>
     <div class="meal">
       <div class="meal-title">饮食照片</div>
       <label class="btn secondary photo-upload" style="cursor:pointer">选择照片
         <input id="mealPhotoInput" type="file" accept="image/*" multiple onchange="handleMealPhotos(event)" hidden>
       </label>
-      <div class="photo-help">每天最多 4 张，照片会自动压缩后保存在当前设备。</div>
+      <div class="photo-help">每天最多 4 张，照片会自动压缩后保存在当前设备。当前免费离线版本的照片仅用于记录，不会自动识别热量。</div>
       <div class="photo-grid" id="mealPhotoPreview"></div>
       <div class="status" id="photoStatus"></div>
     </div>
@@ -272,6 +275,52 @@ const fields = ["weight","sleep","breakfast","breakfastCalories","lunch","lunchC
 const profileFields = ["profileSex","profileAge","profileHeight","activityFactor"];
 const exerciseMet = {"核心":4,"背部":5,"手臂":4.5,"臀腿":6,"Tabata":8,"有氧":6.5,
   "拉伸":2.5,"其他":4,"力量":5.5,"有氧操":7,"快走":4.3};
+const foodCatalog = [
+  {name:"米饭",aliases:["米饭","白饭"],serving:230,per100:116},
+  {name:"杂粮饭",aliases:["杂粮饭","糙米饭"],serving:220,per100:120},
+  {name:"粢饭",aliases:["粢饭","糯米饭团"],serving:400,per100:200},
+  {name:"粥",aliases:["白粥","小米粥","杂粮粥","粥"],serving:100,per100:50},
+  {name:"燕麦",aliases:["燕麦片","燕麦"],serving:150,per100:380},
+  {name:"方便面",aliases:["方便面","泡面"],serving:470,per100:470},
+  {name:"面条",aliases:["面条","汤面","拌面"],serving:330,per100:138},
+  {name:"馒头",aliases:["馒头"],serving:220,per100:220},
+  {name:"包子",aliases:["包子"],serving:230,per100:230},
+  {name:"饺子",aliases:["饺子","水饺"],serving:40,per100:220},
+  {name:"面包",aliases:["全麦面包","吐司","面包"],serving:90,per100:265},
+  {name:"鸡蛋",aliases:["鸡蛋","水煮蛋","荷包蛋"],serving:75,per100:144},
+  {name:"鸡胸肉",aliases:["鸡胸肉","鸡胸"],serving:165,per100:165},
+  {name:"鸡肉",aliases:["鸡腿肉","鸡腿","鸡肉"],serving:220,per100:200},
+  {name:"牛肉",aliases:["牛排","牛肉"],serving:250,per100:250},
+  {name:"猪肉",aliases:["排骨","猪肉","肉丝"],serving:280,per100:280},
+  {name:"鱼",aliases:["三文鱼","鳕鱼","鲈鱼","鱼肉","鱼"],serving:180,per100:150},
+  {name:"虾",aliases:["虾仁","大虾","虾"],serving:100,per100:100},
+  {name:"豆腐",aliases:["豆腐"],serving:100,per100:85},
+  {name:"西兰花",aliases:["西兰花"],serving:70,per100:35},
+  {name:"青菜",aliases:["生菜","菠菜","油麦菜","青菜","蔬菜"],serving:80,per100:35},
+  {name:"番茄",aliases:["西红柿","番茄"],serving:35,per100:18},
+  {name:"黄瓜",aliases:["黄瓜"],serving:30,per100:15},
+  {name:"土豆",aliases:["土豆","马铃薯"],serving:150,per100:77},
+  {name:"红薯",aliases:["红薯","地瓜"],serving:180,per100:90},
+  {name:"玉米",aliases:["玉米"],serving:120,per100:112},
+  {name:"苹果",aliases:["苹果"],serving:95,per100:52},
+  {name:"香蕉",aliases:["香蕉"],serving:105,per100:89},
+  {name:"橙子",aliases:["橙子","橘子"],serving:70,per100:47},
+  {name:"牛奶",aliases:["牛奶","鲜奶"],serving:130,per100:65},
+  {name:"酸奶",aliases:["酸奶"],serving:120,per100:75},
+  {name:"豆浆",aliases:["豆浆"],serving:100,per100:40},
+  {name:"拿铁",aliases:["拿铁"],serving:180,per100:60},
+  {name:"美式咖啡",aliases:["美式咖啡","美式"],serving:10,per100:3},
+  {name:"奶茶",aliases:["奶茶"],serving:400,per100:80},
+  {name:"可乐",aliases:["可乐"],serving:215,per100:43},
+  {name:"果汁",aliases:["果汁"],serving:180,per100:45},
+  {name:"坚果",aliases:["坚果","核桃","杏仁"],serving:180,per100:600},
+  {name:"薯片",aliases:["薯片"],serving:250,per100:536},
+  {name:"巧克力",aliases:["巧克力"],serving:280,per100:560},
+  {name:"蛋糕",aliases:["蛋糕"],serving:350,per100:350},
+  {name:"饼干",aliases:["饼干"],serving:60,per100:500},
+  {name:"冰淇淋",aliases:["冰淇淋","雪糕"],serving:220,per100:220},
+  {name:"食用油",aliases:["橄榄油","食用油","烹调油"],serving:90,per100:900}
+];
 let selectedMood = "";
 let mealPhotos = [];
 const $ = id => document.getElementById(id);
@@ -337,6 +386,7 @@ async function loadEntry(){
   const requestedDate=$("date").value;
   const d = getAll()[requestedDate] || {};
   fields.forEach(id => $(id).value = d[id] ?? (id==="waterGoal" ? "2000" : id==="water" ? "0" : ""));
+  ["breakfast","lunch","dinner","snacks"].forEach(id=>$(id+"Estimate").textContent="");
   setExerciseTypes("noonType",d.noonType);
   setExerciseTypes("eveningType",d.eveningType);
   updateExerciseEstimates(true);
@@ -406,6 +456,39 @@ function renderMealPhotos(){
   </div>`).join("");
 }
 function removeMealPhoto(index){ mealPhotos.splice(index,1); renderMealPhotos(); $("photoStatus").textContent="已删除，请点击底部保存"; }
+function portionMultiplier(text){
+  if(/半\s*(个|碗|杯|份|片|根|只|盒|袋|勺)/.test(text)) return .5;
+  const arabic=text.match(/(\d+(?:\.\d+)?)\s*(个|碗|杯|份|片|根|只|盒|袋|勺)/);
+  if(arabic) return Number(arabic[1]);
+  const chinese=text.match(/([一二两三四五六七八九十])\s*(个|碗|杯|份|片|根|只|盒|袋|勺)/);
+  if(chinese) return ({一:1,二:2,两:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10})[chinese[1]] || 1;
+  return 1;
+}
+function estimateMealText(id){
+  const text=$(id).value.trim(), result=$(id+"Estimate"), calorieInput=$(id+"Calories");
+  if(!text){ result.textContent="请先填写食物和大致分量"; return 0; }
+  const segments=text.split(/[+＋、，,；;\n]/).map(value=>value.trim()).filter(Boolean);
+  let total=0; const recognized=[];
+  segments.forEach(segment=>{
+    const matches=foodCatalog.filter(food=>food.aliases.some(alias=>segment.includes(alias)));
+    const gramsMatch=segment.match(/(\d+(?:\.\d+)?)\s*(?:g|克)/i);
+    matches.forEach(food=>{
+      let calories;
+      if(gramsMatch && food.per100){ calories=Number(gramsMatch[1])/matches.length*food.per100/100; }
+      else{ calories=food.serving*portionMultiplier(segment); }
+      total+=calories; if(!recognized.includes(food.name)) recognized.push(food.name);
+    });
+  });
+  if(!recognized.length){
+    result.textContent="暂未识别这些食物，请手动填写热量或写得更具体"; return 0;
+  }
+  total=Math.max(0,Math.round(total/10)*10); calorieInput.value=total;
+  result.textContent=`已粗估 ${total} kcal（识别：${recognized.join("、")}），可手动修正`;
+  updateSummary(); return total;
+}
+function estimateAllMeals(){
+  ["breakfast","lunch","dinner","snacks"].forEach(id=>{ if($(id).value.trim()) estimateMealText(id); });
+}
 function estimateExerciseSession(name,minutesId,caloriesId,onlyIfEmpty=false){
   if(onlyIfEmpty && $(caloriesId).value!=="") return;
   const weight=Number($("weight").value), minutes=Number($(minutesId).value);
@@ -512,6 +595,7 @@ $("moodCustom").addEventListener("input",()=>{
   document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
 });
 fields.forEach(id=>$(id).addEventListener("input",updateSummary));
+["breakfast","lunch","dinner","snacks"].forEach(id=>$(id).addEventListener("blur",()=>estimateMealText(id)));
 profileFields.forEach(id=>{
   $(id).addEventListener("input",()=>{ saveProfile(); updateSummary(); });
   $(id).addEventListener("change",()=>{ saveProfile(); updateSummary(); });
