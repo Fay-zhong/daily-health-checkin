@@ -51,6 +51,11 @@
     .calorie-row label{margin:0}
     .estimate-tools{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin:0 0 12px}
     .estimate-result{color:var(--good);font-size:12px;line-height:1.5;margin-top:6px;min-height:18px}
+    details.settings{margin-top:12px;border:1px dashed var(--line);border-radius:14px;padding:10px 12px}
+    details.settings summary{cursor:pointer;color:var(--brand);font-weight:700;font-size:13px}
+    details.settings .grid2{margin-top:12px}
+    .gpt-import{background:#f6f0eb;border-radius:16px;padding:13px;margin:10px 0 14px}
+    .gpt-import textarea{min-height:112px;background:#fff}
     .row{display:flex;gap:10px;align-items:center}
     .row > *{flex:1}
     .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
@@ -122,11 +127,13 @@
     <div class="grid2">
       <div><label>体重（kg）</label><input id="weight" type="number" step="0.05" placeholder="例如 63.5"></div>
       <div><label>睡眠（小时）</label><input id="sleep" type="number" step="0.1" placeholder="例如 7.5"></div>
-      <div><label>性别（用于估算基础代谢）</label><select id="profileSex"><option value="">请选择</option><option value="female">女</option><option value="male">男</option></select></div>
-      <div><label>年龄</label><input id="profileAge" type="number" min="14" max="100" step="1" placeholder="例如 35"></div>
-      <div><label>身高（cm）</label><input id="profileHeight" type="number" min="100" max="230" step="1" placeholder="例如 165"></div>
-      <div><label>日常活动水平（不含下方运动）</label><select id="activityFactor"><option value="1.2">久坐为主</option><option value="1.3">轻度活动</option><option value="1.4">中等活动</option><option value="1.5">活动较多</option></select></div>
     </div>
+    <details class="settings"><summary>一次性身体资料（只用于估算每日总消耗）</summary><div class="grid2">
+      <div><label>性别</label><select id="profileSex"><option value="">请选择</option><option value="female">女</option><option value="male">男</option></select></div>
+      <div><label>年龄</label><input id="profileAge" type="number" min="14" max="100" step="1" placeholder="只需设置一次"></div>
+      <div><label>身高（cm）</label><input id="profileHeight" type="number" min="100" max="230" step="1" placeholder="只需设置一次"></div>
+      <div><label>日常活动水平（不含下方运动）</label><select id="activityFactor"><option value="1.2">久坐为主</option><option value="1.3">轻度活动</option><option value="1.4">中等活动</option><option value="1.5">活动较多</option></select></div>
+    </div></details>
     <div style="margin-top:12px">
       <label>今天的身体感受</label>
       <div class="chips" id="moodChips">
@@ -143,7 +150,14 @@
 
   <section class="card">
     <h2><span>饮食记录</span><span>🥣</span></h2>
-    <div class="estimate-tools"><button class="btn secondary" type="button" onclick="estimateAllMeals()">根据文字粗估四餐热量</button><span class="photo-help">请尽量写清克数、个数、碗数或份数</span></div>
+    <div class="gpt-import">
+      <div class="meal-title">从 GPT 导入照片估算结果</div>
+      <div class="photo-help" style="margin-bottom:8px">把餐食照片发给 GPT 并注明餐次，再把回复粘贴到这里。网页会识别“早餐、午餐、晚餐、加餐、中午运动、晚上运动”及热量区间。</div>
+      <textarea id="gptEstimateInput" placeholder="例如：午餐：约 520–620 kcal&#10;晚上运动：约 180 kcal"></textarea>
+      <div class="actions"><button class="btn primary" type="button" onclick="importGptEstimate()">自动填入对应项目</button><button class="btn secondary" type="button" onclick="copyGptPrompt()">复制照片估算提示词</button></div>
+      <div class="status" id="gptImportStatus"></div>
+    </div>
+    <div class="estimate-tools"><button class="btn secondary" type="button" onclick="estimateAllMeals()">根据文字粗估四餐热量</button><span class="photo-help">不知道克重也可以写“一碗、一盘、一个、半份”等大致分量</span></div>
     <div class="meal"><div class="meal-title">早餐</div><textarea id="breakfast" placeholder="例如：鸡蛋2个 + 半碗粢饭 + 牛奶1杯"></textarea><div class="calorie-row"><button class="btn secondary" type="button" onclick="estimateMealText('breakfast')">粗估早餐</button><label>估算热量（kcal）<input id="breakfastCalories" type="number" min="0" step="10" placeholder="自动填入"></label></div><div class="estimate-result" id="breakfastEstimate"></div></div>
     <div class="meal"><div class="meal-title">午餐</div><textarea id="lunch" placeholder="例如：米饭150克 + 青菜1份 + 虾100克"></textarea><div class="calorie-row"><button class="btn secondary" type="button" onclick="estimateMealText('lunch')">粗估午餐</button><label>估算热量（kcal）<input id="lunchCalories" type="number" min="0" step="10" placeholder="自动填入"></label></div><div class="estimate-result" id="lunchEstimate"></div></div>
     <div class="meal"><div class="meal-title">晚餐</div><textarea id="dinner" placeholder="例如：西兰花200克 + 猪肉100克"></textarea><div class="calorie-row"><button class="btn secondary" type="button" onclick="estimateMealText('dinner')">粗估晚餐</button><label>估算热量（kcal）<input id="dinnerCalories" type="number" min="0" step="10" placeholder="自动填入"></label></div><div class="estimate-result" id="dinnerEstimate"></div></div>
@@ -385,6 +399,7 @@ function currentData(){
 async function loadEntry(){
   const requestedDate=$("date").value;
   const d = getAll()[requestedDate] || {};
+  $("gptEstimateInput").value=""; $("gptImportStatus").textContent="";
   fields.forEach(id => $(id).value = d[id] ?? (id==="waterGoal" ? "2000" : id==="water" ? "0" : ""));
   ["breakfast","lunch","dinner","snacks"].forEach(id=>$(id+"Estimate").textContent="");
   setExerciseTypes("noonType",d.noonType);
@@ -457,10 +472,12 @@ function renderMealPhotos(){
 }
 function removeMealPhoto(index){ mealPhotos.splice(index,1); renderMealPhotos(); $("photoStatus").textContent="已删除，请点击底部保存"; }
 function portionMultiplier(text){
-  if(/半\s*(个|碗|杯|份|片|根|只|盒|袋|勺)/.test(text)) return .5;
-  const arabic=text.match(/(\d+(?:\.\d+)?)\s*(个|碗|杯|份|片|根|只|盒|袋|勺)/);
+  if(/小份|小碗|小盘/.test(text)) return .7;
+  if(/大份|大碗|大盘/.test(text)) return 1.5;
+  if(/半\s*(个|碗|杯|份|片|根|只|盒|袋|勺|盘|拳|掌)/.test(text)) return .5;
+  const arabic=text.match(/(\d+(?:\.\d+)?)\s*(个|碗|杯|份|片|根|只|盒|袋|勺|盘|拳|掌)/);
   if(arabic) return Number(arabic[1]);
-  const chinese=text.match(/([一二两三四五六七八九十])\s*(个|碗|杯|份|片|根|只|盒|袋|勺)/);
+  const chinese=text.match(/([一二两三四五六七八九十])\s*(个|碗|杯|份|片|根|只|盒|袋|勺|盘|拳|掌)/);
   if(chinese) return ({一:1,二:2,两:2,三:3,四:4,五:5,六:6,七:7,八:8,九:9,十:10})[chinese[1]] || 1;
   return 1;
 }
@@ -488,6 +505,34 @@ function estimateMealText(id){
 }
 function estimateAllMeals(){
   ["breakfast","lunch","dinner","snacks"].forEach(id=>{ if($(id).value.trim()) estimateMealText(id); });
+}
+function caloriesFromGptLine(line){
+  const range=line.match(/(\d{2,4})\s*(?:-|–|—|~|～|至|到)\s*(\d{2,4})\s*(?:kcal|千卡|大卡|卡路里)/i);
+  if(range) return Math.round((Number(range[1])+Number(range[2]))/2);
+  const values=[...line.matchAll(/(\d{2,4})\s*(?:kcal|千卡|大卡|卡路里)/gi)];
+  return values.length ? Number(values[values.length-1][1]) : null;
+}
+function importGptEstimate(){
+  const text=$("gptEstimateInput").value.trim(), lines=text.split(/\n+/).map(line=>line.trim()).filter(Boolean);
+  const targets=[
+    {id:"breakfastCalories",labels:["早餐","早饭"]},{id:"lunchCalories",labels:["午餐","中饭"]},
+    {id:"dinnerCalories",labels:["晚餐","晚饭"]},{id:"snacksCalories",labels:["加餐","零食","饮料"]},
+    {id:"noonCalories",labels:["中午运动","午间运动"]},{id:"eveningCalories",labels:["晚上运动","晚间运动"]}
+  ];
+  let count=0;
+  targets.forEach(target=>{
+    const line=lines.find(item=>target.labels.some(label=>item.includes(label)));
+    if(!line) return;
+    const calories=caloriesFromGptLine(line);
+    if(calories!==null){ $(target.id).value=calories; count++; }
+  });
+  updateSummary();
+  $("gptImportStatus").textContent=count ? `已填入 ${count} 项，请检查后点击“保存今日记录”` : "没有识别到结果，请让 GPT 按“午餐：520–620 kcal”格式回复";
+}
+function copyGptPrompt(){
+  const prompt=`请根据我上传的餐食照片粗略估算热量。我不知道食物克重，请根据餐盘大小和常见份量判断，并把烹调油、酱料和饮料考虑进去；无法确定时给出合理区间。请询问或根据我说明的餐次，最后严格按以下格式逐行输出，没有的项目省略：\n早餐：___–___ kcal\n午餐：___–___ kcal\n晚餐：___–___ kcal\n加餐：___–___ kcal\n中午运动：___ kcal\n晚上运动：___ kcal`;
+  navigator.clipboard.writeText(prompt).then(()=>$("gptImportStatus").textContent="提示词已复制，请到 GPT 上传照片并粘贴")
+    .catch(()=>{ $("gptEstimateInput").value=prompt; $("gptImportStatus").textContent="请复制框内提示词发给 GPT"; });
 }
 function estimateExerciseSession(name,minutesId,caloriesId,onlyIfEmpty=false){
   if(onlyIfEmpty && $(caloriesId).value!=="") return;
