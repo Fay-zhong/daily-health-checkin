@@ -47,6 +47,8 @@
     .meal{padding:12px 0;border-top:1px dashed var(--line)}
     .meal:first-of-type{border-top:0;padding-top:0}
     .meal-title{font-weight:700;margin-bottom:8px}
+    .calorie-row{display:grid;grid-template-columns:1fr 145px;gap:10px;align-items:end;margin-top:9px}
+    .calorie-row label{margin:0}
     .row{display:flex;gap:10px;align-items:center}
     .row > *{flex:1}
     .chips{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}
@@ -72,9 +74,14 @@
     .progress{height:10px;background:#eee5de;border-radius:999px;overflow:hidden;margin:12px 0 5px}
     .progress span{display:block;height:100%;background:linear-gradient(90deg,var(--brand2),var(--brand));width:0;transition:.25s}
     .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+    .energy-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
     .metric{background:#f6f0eb;border-radius:15px;padding:12px;text-align:center}
     .metric b{display:block;font-size:18px;margin-bottom:2px}
     .metric small{color:var(--muted)}
+    .balance-box{margin-top:12px;border-radius:16px;padding:14px;text-align:center;font-weight:700;background:#f6f0eb}
+    .balance-deficit{background:#e8f2eb;color:#3f6d4d}
+    .balance-surplus{background:#f8e9e6;color:#9b514b}
+    .balance-even{background:#eee8df;color:#705f50}
     .actions{display:flex;gap:9px;flex-wrap:wrap;margin-top:14px}
     .btn{
       border:0;border-radius:14px;padding:12px 16px;font-weight:700;cursor:pointer
@@ -91,6 +98,7 @@
     .footer-note{color:var(--muted);font-size:12px;text-align:center;margin-top:16px;line-height:1.6}
     @media(max-width:520px){
       h1{font-size:25px}.grid2{grid-template-columns:1fr}.summary{grid-template-columns:repeat(3,1fr)}
+      .energy-grid{grid-template-columns:repeat(2,1fr)}.calorie-row{grid-template-columns:1fr}
       .card{border-radius:19px;padding:15px}.app{padding-left:12px;padding-right:12px}
     }
   </style>
@@ -112,6 +120,10 @@
     <div class="grid2">
       <div><label>体重（kg）</label><input id="weight" type="number" step="0.05" placeholder="例如 63.5"></div>
       <div><label>睡眠（小时）</label><input id="sleep" type="number" step="0.1" placeholder="例如 7.5"></div>
+      <div><label>性别（用于估算基础代谢）</label><select id="profileSex"><option value="">请选择</option><option value="female">女</option><option value="male">男</option></select></div>
+      <div><label>年龄</label><input id="profileAge" type="number" min="14" max="100" step="1" placeholder="例如 35"></div>
+      <div><label>身高（cm）</label><input id="profileHeight" type="number" min="100" max="230" step="1" placeholder="例如 165"></div>
+      <div><label>日常活动水平（不含下方运动）</label><select id="activityFactor"><option value="1.2">久坐为主</option><option value="1.3">轻度活动</option><option value="1.4">中等活动</option><option value="1.5">活动较多</option></select></div>
     </div>
     <div style="margin-top:12px">
       <label>今天的身体感受</label>
@@ -129,10 +141,10 @@
 
   <section class="card">
     <h2><span>饮食记录</span><span>🥣</span></h2>
-    <div class="meal"><div class="meal-title">早餐</div><textarea id="breakfast" placeholder="吃了什么、大概分量，例如：鸡蛋2个 + 半个粢饭"></textarea></div>
-    <div class="meal"><div class="meal-title">午餐</div><textarea id="lunch" placeholder="例如：半碗米饭 + 青菜 + 虾"></textarea></div>
-    <div class="meal"><div class="meal-title">晚餐</div><textarea id="dinner" placeholder="例如：西兰花 + 猪肉，没吃主食"></textarea></div>
-    <div class="meal"><div class="meal-title">加餐 / 咖啡 / 饮料</div><textarea id="snacks" placeholder="咖啡、气泡水、水果、零食等"></textarea></div>
+    <div class="meal"><div class="meal-title">早餐</div><textarea id="breakfast" placeholder="吃了什么、大概分量，例如：鸡蛋2个 + 半个粢饭"></textarea><div class="calorie-row"><div class="photo-help">可参考包装营养表或常用食物热量填写</div><label>估算热量（kcal）<input id="breakfastCalories" type="number" min="0" step="10" placeholder="例如 350"></label></div></div>
+    <div class="meal"><div class="meal-title">午餐</div><textarea id="lunch" placeholder="例如：半碗米饭 + 青菜 + 虾"></textarea><div class="calorie-row"><div class="photo-help">包含烹调油、酱料和饮料会更接近实际</div><label>估算热量（kcal）<input id="lunchCalories" type="number" min="0" step="10" placeholder="例如 550"></label></div></div>
+    <div class="meal"><div class="meal-title">晚餐</div><textarea id="dinner" placeholder="例如：西兰花 + 猪肉，没吃主食"></textarea><div class="calorie-row"><div class="photo-help">没有把握时可先填一个大致范围的中间值</div><label>估算热量（kcal）<input id="dinnerCalories" type="number" min="0" step="10" placeholder="例如 450"></label></div></div>
+    <div class="meal"><div class="meal-title">加餐 / 咖啡 / 饮料</div><textarea id="snacks" placeholder="咖啡、气泡水、水果、零食等"></textarea><div class="calorie-row"><div class="photo-help">含糖饮料、奶和零食也计入全天摄入</div><label>估算热量（kcal）<input id="snacksCalories" type="number" min="0" step="10" placeholder="例如 150"></label></div></div>
     <div class="meal">
       <div class="meal-title">饮食照片</div>
       <label class="btn secondary photo-upload" style="cursor:pointer">选择照片
@@ -195,7 +207,7 @@
         <label class="exercise-choice"><input type="checkbox" name="noonType" value="拉伸">拉伸</label>
         <label class="exercise-choice"><input type="checkbox" name="noonType" value="其他">其他</label>
       </div>
-      <label>中午总时长（分钟）</label><input id="noonMinutes" type="number" min="0" placeholder="例如 20">
+      <div class="grid2"><div><label>中午总时长（分钟）</label><input id="noonMinutes" type="number" min="0" placeholder="例如 20"></div><div><label>估算消耗（kcal，可修改）</label><input id="noonCalories" type="number" min="0" step="1" placeholder="自动估算"></div></div>
     </div>
     <div class="training-block">
       <label>晚上训练类型（可多选）</label>
@@ -210,9 +222,22 @@
         <label class="exercise-choice"><input type="checkbox" name="eveningType" value="拉伸">拉伸</label>
         <label class="exercise-choice"><input type="checkbox" name="eveningType" value="其他">其他</label>
       </div>
-      <label>晚上总时长（分钟）</label><input id="eveningMinutes" type="number" min="0" placeholder="例如 30">
+      <div class="grid2"><div><label>晚上总时长（分钟）</label><input id="eveningMinutes" type="number" min="0" placeholder="例如 30"></div><div><label>估算消耗（kcal，可修改）</label><input id="eveningCalories" type="number" min="0" step="1" placeholder="自动估算"></div></div>
     </div>
+    <div class="photo-help">运动消耗会根据体重、所选类型和时长自动估算；若手表或器械有数据，可直接修改为实测值。</div>
     <div style="margin-top:12px"><label>训练内容 / 感受</label><textarea id="exerciseNote" placeholder="例如：Tabata 8个动作×2组，第二组比较吃力"></textarea></div>
+  </section>
+
+  <section class="card">
+    <h2><span>今日热量收支</span><span>⚖️</span></h2>
+    <div class="energy-grid">
+      <div class="metric"><b id="totalIntake">0</b><small>摄入（kcal）</small></div>
+      <div class="metric"><b id="baseBurn">--</b><small>基础＋日常</small></div>
+      <div class="metric"><b id="exerciseBurn">0</b><small>运动消耗</small></div>
+      <div class="metric"><b id="totalBurn">--</b><small>总消耗（kcal）</small></div>
+    </div>
+    <div class="balance-box" id="energyBalance">请填写体重、性别、年龄和身高</div>
+    <div class="photo-help">热量缺口＝全天总消耗－摄入。基础代谢和运动消耗均为公式估算，适合观察长期趋势，不代表医学测量结果。</div>
   </section>
 
   <section class="card">
@@ -240,9 +265,13 @@
 </main>
 
 <script>
-const fields = ["weight","sleep","breakfast","lunch","dinner","snacks","water","waterGoal",
-  "bowelTime","bowelCount","bowelStatus","bowelNote","noonMinutes","eveningMinutes",
-  "exerciseNote","reflection"];
+const fields = ["weight","sleep","breakfast","breakfastCalories","lunch","lunchCalories",
+  "dinner","dinnerCalories","snacks","snacksCalories","water","waterGoal",
+  "bowelTime","bowelCount","bowelStatus","bowelNote","noonMinutes","noonCalories",
+  "eveningMinutes","eveningCalories","exerciseNote","reflection"];
+const profileFields = ["profileSex","profileAge","profileHeight","activityFactor"];
+const exerciseMet = {"核心":4,"背部":5,"手臂":4.5,"臀腿":6,"Tabata":8,"有氧":6.5,
+  "拉伸":2.5,"其他":4,"力量":5.5,"有氧操":7,"快走":4.3};
 let selectedMood = "";
 let mealPhotos = [];
 const $ = id => document.getElementById(id);
@@ -252,6 +281,15 @@ const todayStr = () => {
 };
 function getAll(){ return JSON.parse(localStorage.getItem("fitnessEntries") || "{}"); }
 function setAll(data){ localStorage.setItem("fitnessEntries", JSON.stringify(data)); }
+function getProfile(){ return JSON.parse(localStorage.getItem("fitnessProfile") || "{}"); }
+function saveProfile(){
+  const profile={}; profileFields.forEach(id=>profile[id]=$(id).value);
+  localStorage.setItem("fitnessProfile",JSON.stringify(profile));
+}
+function loadProfile(){
+  const profile=getProfile();
+  profileFields.forEach(id=>$(id).value=profile[id] ?? (id==="activityFactor" ? "1.2" : ""));
+}
 function openPhotoDb(){
   return new Promise((resolve,reject)=>{
     const request=indexedDB.open("dailyRhythmPhotos",1);
@@ -301,6 +339,7 @@ async function loadEntry(){
   fields.forEach(id => $(id).value = d[id] ?? (id==="waterGoal" ? "2000" : id==="water" ? "0" : ""));
   setExerciseTypes("noonType",d.noonType);
   setExerciseTypes("eveningType",d.eveningType);
+  updateExerciseEstimates(true);
   const storedPhotos=await getStoredPhotos(requestedDate).catch(()=>[]);
   if($("date").value!==requestedDate) return;
   mealPhotos = storedPhotos.length ? storedPhotos : Array.isArray(d.mealPhotos) ? d.mealPhotos : [];
@@ -367,6 +406,20 @@ function renderMealPhotos(){
   </div>`).join("");
 }
 function removeMealPhoto(index){ mealPhotos.splice(index,1); renderMealPhotos(); $("photoStatus").textContent="已删除，请点击底部保存"; }
+function estimateExerciseSession(name,minutesId,caloriesId,onlyIfEmpty=false){
+  if(onlyIfEmpty && $(caloriesId).value!=="") return;
+  const weight=Number($("weight").value), minutes=Number($(minutesId).value);
+  const types=selectedExerciseTypes(name);
+  if(!weight || !minutes){ $(caloriesId).value=""; return; }
+  const mets=types.length ? types.map(type=>exerciseMet[type] || 4) : [4];
+  const averageMet=mets.reduce((sum,value)=>sum+value,0)/mets.length;
+  $(caloriesId).value=Math.round(averageMet*3.5*weight/200*minutes);
+}
+function updateExerciseEstimates(onlyIfEmpty=false){
+  estimateExerciseSession("noonType","noonMinutes","noonCalories",onlyIfEmpty);
+  estimateExerciseSession("eveningType","eveningMinutes","eveningCalories",onlyIfEmpty);
+  updateSummary();
+}
 function updateSummary(){
   const meals=["breakfast","lunch","dinner","snacks"].filter(id=>$(id).value.trim()).length;
   const mins=(Number($("noonMinutes").value)||0)+(Number($("eveningMinutes").value)||0);
@@ -374,6 +427,32 @@ function updateSummary(){
   const pct=Math.max(0,Math.round(water/goal*100));
   $("sumMeals").textContent=meals+"/4"; $("sumExercise").textContent=mins; $("sumWater").textContent=pct+"%";
   $("waterProgress").style.width=Math.min(100,pct)+"%";
+  const intake=["breakfastCalories","lunchCalories","dinnerCalories","snacksCalories"]
+    .reduce((sum,id)=>sum+(Number($(id).value)||0),0);
+  const exercise=(Number($("noonCalories").value)||0)+(Number($("eveningCalories").value)||0);
+  $("totalIntake").textContent=Math.round(intake); $("exerciseBurn").textContent=Math.round(exercise);
+  const weight=Number($("weight").value), age=Number($("profileAge").value), height=Number($("profileHeight").value);
+  const sex=$("profileSex").value, activity=Number($("activityFactor").value)||1.2;
+  const balanceBox=$("energyBalance");
+  balanceBox.className="balance-box";
+  if(!weight || !age || !height || !sex){
+    $("baseBurn").textContent="--"; $("totalBurn").textContent="--";
+    balanceBox.textContent="请填写体重、性别、年龄和身高"; return;
+  }
+  const bmr=10*weight+6.25*height-5*age+(sex==="male" ? 5 : -161);
+  const baseDaily=Math.max(0,Math.round(bmr*activity));
+  const total=Math.round(baseDaily+exercise), difference=Math.round(total-intake);
+  $("baseBurn").textContent=baseDaily; $("totalBurn").textContent=total;
+  if(Math.abs(difference)<=50){
+    balanceBox.textContent=`今日摄入与消耗基本平衡（相差约 ${Math.abs(difference)} kcal）`;
+    balanceBox.classList.add("balance-even");
+  }else if(difference>0){
+    balanceBox.textContent=`今日热量缺口约 ${difference} kcal`;
+    balanceBox.classList.add("balance-deficit");
+  }else{
+    balanceBox.textContent=`今日热量盈余约 ${Math.abs(difference)} kcal`;
+    balanceBox.classList.add("balance-surplus");
+  }
 }
 function renderHistory(){
   const all=getAll(), dates=Object.keys(all).sort().reverse().slice(0,14), box=$("history");
@@ -390,11 +469,12 @@ function renderHistory(){
 function openDate(date){ $("date").value=date; loadEntry(); window.scrollTo({top:0,behavior:"smooth"}); }
 function escapeHtml(str){ return String(str).replace(/[&<>"']/g,s=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[s])); }
 async function exportData(){
-  const data=getAll();
-  for(const date of Object.keys(data)){
+  const entries=getAll();
+  for(const date of Object.keys(entries)){
     const photos=await getStoredPhotos(date).catch(()=>[]);
-    if(photos.length) data[date]={...data[date],mealPhotos:photos};
+    if(photos.length) entries[date]={...entries[date],mealPhotos:photos};
   }
+  const data={version:2,profile:getProfile(),entries};
   const blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
   const a=document.createElement("a"); a.href=URL.createObjectURL(blob);
   a.download="饮食运动记录备份_"+todayStr()+".json"; a.click(); URL.revokeObjectURL(a.href);
@@ -406,8 +486,13 @@ function importData(e){
     try{
       const incoming=JSON.parse(reader.result);
       if(!incoming || Array.isArray(incoming) || typeof incoming!=="object") throw new Error();
+      const source=incoming.entries && typeof incoming.entries==="object" ? incoming.entries : incoming;
+      if(incoming.profile && typeof incoming.profile==="object"){
+        localStorage.setItem("fitnessProfile",JSON.stringify(incoming.profile)); loadProfile();
+      }
       const cleaned={};
-      for(const [date,value] of Object.entries(incoming)){
+      for(const [date,value] of Object.entries(source)){
+        if(!value || typeof value!=="object" || Array.isArray(value)) continue;
         const entry={...value};
         if(Array.isArray(entry.mealPhotos)) await storePhotos(date,entry.mealPhotos);
         delete entry.mealPhotos; cleaned[date]=entry;
@@ -427,8 +512,25 @@ $("moodCustom").addEventListener("input",()=>{
   document.querySelectorAll(".chip").forEach(c=>c.classList.remove("active"));
 });
 fields.forEach(id=>$(id).addEventListener("input",updateSummary));
+profileFields.forEach(id=>{
+  $(id).addEventListener("input",()=>{ saveProfile(); updateSummary(); });
+  $(id).addEventListener("change",()=>{ saveProfile(); updateSummary(); });
+});
+$("weight").addEventListener("input",()=>updateExerciseEstimates(false));
+$("noonMinutes").addEventListener("input",()=>{
+  estimateExerciseSession("noonType","noonMinutes","noonCalories"); updateSummary();
+});
+$("eveningMinutes").addEventListener("input",()=>{
+  estimateExerciseSession("eveningType","eveningMinutes","eveningCalories"); updateSummary();
+});
+document.querySelectorAll('input[name="noonType"]').forEach(input=>input.addEventListener("change",()=>{
+  estimateExerciseSession("noonType","noonMinutes","noonCalories"); updateSummary();
+}));
+document.querySelectorAll('input[name="eveningType"]').forEach(input=>input.addEventListener("change",()=>{
+  estimateExerciseSession("eveningType","eveningMinutes","eveningCalories"); updateSummary();
+}));
 $("date").addEventListener("change",loadEntry);
-$("date").value=todayStr(); loadEntry();
+loadProfile(); $("date").value=todayStr(); loadEntry();
 if("serviceWorker" in navigator) navigator.serviceWorker.register("sw.js").catch(()=>{});
 </script>
 </body>
